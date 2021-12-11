@@ -6,49 +6,112 @@ import sqlalchemy
 bp = Blueprint('attendees', __name__, url_prefix='/attendees')
 
 
-@bp.route('blocked_rooms/<attendee_name>', methods=['GET'])
-def attendee_rooms(attendee_name: str):
+@bp.route('blocked_rooms/<string:attendee_name>', methods=['GET'])
+def attendee_rooms_by_name(attendee_name: str):
+    """
+    This endpoint allows user to see which room types are available for them
+    """
+    # Make inserted attendee name lowercase
+    attendee_name = attendee_name.lower()
 
-    a = Attendee_Type.query.filter(Attendee_Type.name == attendee_name).first()
+    # Filter by attendee name to get the appropriate object
+    a = Attendee_Type.query.filter_by(
+        name=attendee_name).one()
 
-    result = []
+    # Create a result list to add room_types to
+    results = []
+    # Loop through the room collection linked to the attendee
     for r in a.rooms:
-        result.append(r.serialize_with_hotel())
+        # Append room type to result list
+        results.append(r.serialize_with_hotel())
 
-    return jsonify(result)
+    # Return reult list as a json object
+    return jsonify(results)
 
 
-@bp.route('attendee_inventory/<attendee_name>', methods=['GET'])
-def attendee_inventory(attendee_name: str):
+@bp.route('blocked_rooms/<int:id>', methods=['GET'])
+def attendee_rooms_by_id(id: int):
+    """
+    This endpoint allows user to see which room types are available for them using the id
+    """
 
-    a = db.session.query(Attendee_Type).filter(
-        Attendee_Type.name == attendee_name).first()
+    # Filter by attendee name to get th appropriate row
+    a = Attendee_Type.query.get_or_404(id)
 
-    result = []
+    # Create a result list to add room_types to
+    results = []
+    # Loop through the room collection linked to the attendee
     for r in a.rooms:
+        # Append room type to result list
+        results.append(r.serialize_with_hotel())
+
+    # Return reult list as a json object
+    return jsonify(results)
+
+
+@bp.route('attendee_inventory/<string:attendee_name>', methods=['GET'])
+def attendee_inventory_by_name(attendee_name: str):
+
+    # Make inserted attendee_name lowercase
+    attendee_name = attendee_name.lower()
+
+    # Filter for matching attendee row
+    a = Attendee_Type.query.filter_by(
+        name=attendee_name).one()
+
+    # Create a result list to add room_types to
+    results = []
+    # Loop through the room collection linked to the attendee
+    for r in a.rooms:
+        # Lopp through the inventory for each room_type
         for inv in r.inventory.all():
-            result.append(inv.serialize())
+            # Append inventory to result set
+            results.append(inv.serialize())
 
-    return jsonify(result)
+    # Return reult list as a json object
+    return jsonify(results)
 
 
-@bp.route('available/<attendee_name>', methods=['GET'])
-def available(attendee_name: str):
+@bp.route('attendee_inventory/<int:id>', methods=['GET'])
+def attendee_inventory_by_id(id: int):
+
+    # Filter for matching attendee row
+    a = Attendee_Type.query.get_or_404(id)
+
+    # Create a result list to add room_types to
+    results = []
+    # Loop through the room collection linked to the attendee
+    for r in a.rooms:
+        # Lopp through the inventory for each room_type
+        for inv in r.inventory.all():
+            # Append inventory to result set
+            results.append(inv.serialize())
+
+    # Return reult list as a json object
+    return jsonify(results)
+
+
+@bp.route('available/<string:attendee_name>', methods=['GET'])
+def available_by_name(attendee_name: str):
+
+    # Make inserted attendee name lowercase
+    attendee_name = attendee_name.lower()
 
     # Check to see if dates are in request
-    if 'check_in' not in request.json or 'check_out' not in request.json:
-        return abort(400)
+    if 'check_in_date' not in request.json or 'check_out_date' not in request.json:
+        return abort(400, description="Error: check_in_date or check_out_date not included in request")
 
     # check to see if the length of the strings is correct
-    if len(request.json['check_in']) != 10 or len(request.json['check_out']) != 10:
-        return abort(400)
+    if len(request.json['check_in_date']) != 10 or len(request.json['check_out_date']) != 10:
+        return abort(400, description="Error: Dates have to be in yyyy-mm-dd format")
 
     # NEED ERROR HANDLING
-    a = db.session.query(Attendee_Type).filter(
-        Attendee_Type.name == attendee_name).first()
+    a = Attendee_Type.query.filter_by(
+        name=attendee_name).one()
 
+    # check if acces code is correct
     if a.access_code != request.json['access_code']:
-        return abort(400)
+        return abort(400, description="Error: Incorrect access code")
 
     # Check to see if the number of rooms is included in the request if not assume it is 1 room
     number_of_rooms = request.json['number_of_rooms'] if 'number_of_rooms' in request.json else 1
@@ -75,42 +138,40 @@ def available(attendee_name: str):
     # checnge the last_night back to a string
     last_night = last_night.strftime('%Y-%m-%d')
 
+    # Create a result list to add room_types to
     results = []
+    # Loop through the room collection linked to the attendee
     for r in a.rooms:
+        # filter for invnetory between the first night and last night that has the required inventory
         ri = r.inventory.filter(Room_Inventory.inventory >= number_of_rooms,
                                 Room_Inventory.date >= first_night, Room_Inventory.date <= last_night)
+
+        # Check to see if their is inventory for all nights required
         if len(ri.all()) == number_of_nights:
+            # append to results set
             results.append(r.serialize_with_hotel())
 
+    # return results as json object
     return jsonify(results)
 
 
-@bp.route('/reserve', methods=['POST'])
-def reserve():
+@bp.route('available/<int:id>', methods=['GET'])
+def available_by_id(id: int):
 
-    required_fields = ['first_name', 'last_name', 'check_in_date', 'check_out_date',
-                       'address', 'city', 'state_abr', 'zip_code', 'room_id']
+    # Check to see if dates are in request
+    if 'check_in_date' not in request.json or 'check_out_date' not in request.json:
+        return abort(400, description="Error: check_in_date or check_out_date not included in request")
 
-    # looping throught to see if all required fields are in json request
-    for field in required_fields:
-        if field not in request.json:
-            return abort(400)
-        else:
-            continue
+    # check to see if the length of the strings is correct
+    if len(request.json['check_in_date']) != 10 or len(request.json['check_out_date']) != 10:
+        return abort(400, description="Error: Dates have to be in yyyy-mm-dd format")
 
-    a = Attendee_Type.query.get_or_404(request.json['attendee_id'])
+    # NEED ERROR HANDLING
+    a = Attendee_Type.query.get_or_404(id)
 
-    # Check to see if attendee can reserve this room_type
-    if not a.rooms.filter(id == request.json['room_id']):
-        return abort(404)
-    # if not a.rooms.has(id=request.json['room_id']):
-    #     return abort(404)
-
+    # check if acces code is correct
     if a.access_code != request.json['access_code']:
-        return "Error: Access code incorrect for attendee type"
-
-    # Get
-    r = Room_Type.query.get_or_404(request.json['room_id'])
+        return abort(400, description="Error: Incorrect access code")
 
     # Check to see if the number of rooms is included in the request if not assume it is 1 room
     number_of_rooms = request.json['number_of_rooms'] if 'number_of_rooms' in request.json else 1
@@ -135,6 +196,75 @@ def reserve():
     last_night = last_night - subtract_day
 
     # checnge the last_night back to a string
+    last_night = last_night.strftime('%Y-%m-%d')
+
+    # Create a result list to add room_types to
+    results = []
+    # Loop through the room collection linked to the attendee
+    for r in a.rooms:
+        # filter for invnetory between the first night and last night that has the required inventory
+        ri = r.inventory.filter(Room_Inventory.inventory >= number_of_rooms,
+                                Room_Inventory.date >= first_night, Room_Inventory.date <= last_night)
+
+        # Check to see if their is inventory for all nights required
+        if len(ri.all()) == number_of_nights:
+            # append to results set
+            results.append(r.serialize_with_hotel())
+
+    # return results as json object
+    return jsonify(results)
+
+
+@bp.route('/reserve', methods=['POST'])
+def reserve():
+
+    # List of required fields to loop through
+    required_fields = ['first_name', 'last_name', 'check_in_date', 'check_out_date',
+                       'address', 'city', 'state_abr', 'zip_code', 'room_id']
+
+    # Looping throught to see if all required fields are in json request
+    for field in required_fields:
+        if field not in request.json:
+            return abort(400, description=f"Error: {field} not in request")
+        else:
+            continue
+
+    a = Attendee_Type.query.get_or_404(request.json['attendee_id'])
+
+    #  Check to see if access code is correct
+    if a.access_code != request.json['access_code']:
+        return abort(400, description="Error: Incorrect access code")
+
+    # Check to see if attendee can reserve this room_type
+    if a.rooms.filter_by(id=request.json['room_id']).scalar() is None:
+        return abort(404, description="Room not available for your attendee type")
+
+    # Get room_type
+    r = Room_Type.query.get_or_404(request.json['room_id'])
+
+    # Check to see if the number of rooms is included in the request if not assume it is 1 room
+    number_of_rooms = request.json['number_of_rooms'] if 'number_of_rooms' in request.json else 1
+
+    # Save check in date as first night
+    first_night = request.json['check_in_date']
+
+    # Save the last_night as a datetime object
+    last_night = datetime.strptime(request.json['check_out_date'], '%Y-%m-%d')
+
+    # Save first night as datetime object
+    first_night_date = datetime.strptime(
+        first_night, '%Y-%m-%d')
+
+    # Subtract the first_night_date from the last_night to get the number of nights needed to be used later
+    number_of_nights = last_night.day - first_night_date.day
+
+    # Create a timedelta object to be used to get the night before the chekout
+    subtract_day = timedelta(1)
+
+    # Subtract one day from the checkout to get the last_night needed
+    last_night = last_night - subtract_day
+
+    # Convert the last_night back to a string
     last_night = last_night.strftime('%Y-%m-%d')
 
     # Filter for the rows in room_inventory where the the number of rooms available is greater than the number of rooms requested
@@ -142,7 +272,7 @@ def reserve():
     inventory = r.inventory.filter(Room_Inventory.inventory >= number_of_rooms,
                                    Room_Inventory.date >= first_night, Room_Inventory.date <= last_night)
 
-    # check to see if all nights are included from the filtered inventory object if it is less than the number of nights it is aborted
+    # Check to see if all nights are included from the filtered inventory object if it is less than the number of nights it is aborted
     if len(inventory.all()) != number_of_nights:
         return abort(404, description="This Room type does not have enough inventory")
     else:
@@ -150,9 +280,9 @@ def reserve():
         add_list = []
         # Loop through the inventory rows
         for ri in inventory:
-            # decrease the inventory by the number of nights requested
+            # Decrease the inventory by the number of nights requested
             ri.inventory = ri.inventory - number_of_rooms
-            # append the row the the add list
+            # Append the row the the add list
             add_list.append(ri)
 
         # Create the reservation to add to the commit list
@@ -161,14 +291,14 @@ def reserve():
                           request.json['address'], request.json['city'], request.json['state_abr'],
                           request.json['zip_code'], request.json['room_id'], request.json['attendee_id'], r.hotel_id)
 
-        # add the reservation to the add list
+        # Add the reservation to the add list
         add_list.append(res)
 
-        # add all of the rows to be commited
+        # Add all of the rows to be commited
         db.session.add_all(add_list)
 
-        # commit all of the rows
+        # Commit all of the rows
         db.session.commit()
 
-        # return True (need to update to include all details of the reservation)
+        # Return True (need to update to include all details of the reservation)
         return jsonify(True)
