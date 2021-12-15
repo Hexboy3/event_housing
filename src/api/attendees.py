@@ -9,7 +9,7 @@ bp = Blueprint('attendees', __name__, url_prefix='/attendees')
 @bp.route('blocked_rooms/<string:attendee_name>', methods=['GET'])
 def attendee_rooms_by_name(attendee_name: str):
     """
-    This endpoint allows user to see which room types are available for them
+    Returns various room types based on the rooms available to the attendee type name input by the user
     """
     # Make inserted attendee name lowercase
     attendee_name = attendee_name.lower()
@@ -32,7 +32,7 @@ def attendee_rooms_by_name(attendee_name: str):
 @bp.route('blocked_rooms/<int:id>', methods=['GET'])
 def attendee_rooms_by_id(id: int):
     """
-    This endpoint allows user to see which room types are available for them using the id
+    Returns various room types based on the rooms available to the attendee type id input by the user
     """
 
     # Filter by attendee name to get th appropriate row
@@ -52,6 +52,9 @@ def attendee_rooms_by_id(id: int):
 @bp.route('attendee_inventory/<string:attendee_name>', methods=['GET'])
 def attendee_inventory_by_name(attendee_name: str):
 
+    '''
+    Returns the inventory for each day and room type based on the attendee name entered
+    '''
     # Make inserted attendee_name lowercase
     attendee_name = attendee_name.lower()
 
@@ -75,6 +78,10 @@ def attendee_inventory_by_name(attendee_name: str):
 @bp.route('attendee_inventory/<int:id>', methods=['GET'])
 def attendee_inventory_by_id(id: int):
 
+    '''
+    Returns the inventory for each day and room type based on the attendee id entered
+    '''
+
     # Filter for matching attendee row
     a = Attendee_Type.query.get_or_404(id)
 
@@ -93,6 +100,11 @@ def attendee_inventory_by_id(id: int):
 
 @bp.route('available/<string:attendee_name>', methods=['GET'])
 def available_by_name(attendee_name: str):
+
+
+    '''
+    Returns the available rooms based on the check in and check out dates, number of rooms needed, and attendee name entered
+    '''
 
     # Make inserted attendee name lowercase
     attendee_name = attendee_name.lower()
@@ -158,6 +170,11 @@ def available_by_name(attendee_name: str):
 @bp.route('available/<int:id>', methods=['GET'])
 def available_by_id(id: int):
 
+
+    '''
+    Returns the available rooms based on the check in and check out dates, number of rooms needed, and attendee id entered
+    '''
+
     # Check to see if dates are in request
     if 'check_in_date' not in request.json or 'check_out_date' not in request.json:
         return abort(400, description="Error: check_in_date or check_out_date not included in request")
@@ -222,7 +239,7 @@ def reserve():
     required_fields = ['first_name', 'last_name', 'check_in_date', 'check_out_date',
                        'address', 'city', 'state_abr', 'zip_code', 'room_id']
 
-    # Looping throught to see if all required fields are in json request
+    # Looping through to see if all required fields are in json request
     for field in required_fields:
         if field not in request.json:
             return abort(400, description=f"Error: {field} not in request")
