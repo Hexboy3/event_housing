@@ -9,7 +9,7 @@ services:
     command: python wsgi.py run -h 0.0.0.0
     environment:
       - FLASK_ENV=development
-      - DATABASE_URL=postgresql://postgres:@pg:5432/event_housing_db
+      - DATABASE_URL=postgresql://postgres:@localhost:5432/event_housing_db
     depends_on:
       - pg
     links:
