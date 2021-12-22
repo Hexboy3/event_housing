@@ -1,0 +1,50 @@
+version: '3.4'
+
+services:
+  api:
+    image: eventhousing
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    command: python wsgi.py run -h 0.0.0.0
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=postgresql://postgres:@pg:5432/event_housing_db
+    depends_on:
+      - pg
+    links:
+      - pg
+    ports:
+      - 5000:5000
+  pg:
+    container_name: pg_container
+    image: postgres:13.2-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+      PGUSER: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data:/data
+      - ./data/misc/init.sql:/docker-entrypoint-initdb.d/1-init.sql
+  pgadmin:
+    container_name: pgadmin_container
+    image: dpage/pgadmin4:5.2
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_LISTEN_PORT: 5433
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+      PGADMIN_CONFIG_UPGRADE_CHECK_ENABLED: "False"
+    ports:
+      - "5433:5433"
+    depends_on:
+      - pg
+networks:
+  default:
+    name: nunet
