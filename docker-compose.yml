@@ -1,9 +1,10 @@
-version: '3.4'
+version: '3.8'
 
 services:
   api:
     image: eventhousing
     build: .
+    command: flask db upgrade
     ports:
       - 5000:5000
     environment:
@@ -18,13 +19,10 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin123
       POSTGRES_DB: event_housing_db
       POSTGRES_HOST_AUTH_METHOD: trust
-      POSTGRES_PASSWORD: admin123
     ports:
       - "5432:5432"
-  migration:
-    build: .
-    command: flask db upgrade
-    depends_on:
-      - event_housing
+    volumes:
+      - ./data:/data
