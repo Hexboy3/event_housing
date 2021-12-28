@@ -1,27 +1,27 @@
 # For more information, please refer to https://aka.ms/vscode-docker-python
-FROM python:slim
+FROM python:3.9.5-slim-buster
 
 EXPOSE 5000
 
-WORKDIR /usr/src/app
-# Keeps Python from generating .pyc files in the container
+
+
 ENV PYTHONDONTWRITEBYTECODE=1
-
-# Turns off buffering for easier container logging
 ENV PYTHONUNBUFFERED=1
+ENV FLASK_ENV="development"
 
-# Install pip requirements
-RUN pip install --upgrade pip
-COPY requirements.txt /usr/src/app/requirements.txt
+RUN apt-get update \ 
+    && apt-get -y install libpq-dev gcc \
+    && pip install psycopg2
+
+
+COPY requirements.txt .
 RUN python -m pip install -r requirements.txt
 
-COPY . /usr/src/app
+WORKDIR /event_housing
+COPY . /event_housing
 
-# Creates a non-root user with an explicit UID and adds permission to access the /app folder
-# For more info, please refer to https://aka.ms/vscode-docker-python-configure-containers
-# RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /event_housing
-# USER appuser
+RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /event_housing
+USER appuser
 
 
-# During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
-# CMD ["gunicorn", "--bind", "0.0.0.0:5000", "wsgi:app"]
+CMD ["flask", "run", "--host", "0.0.0.0"]
