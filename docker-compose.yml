@@ -1,33 +1,22 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  api:
-    image: eventhousing
-    build: .
-    ports:
-      - 5000:5000
-    environment:
-      - PYTHONDONTWRITEBYTECODE=1
-      - PYTHONUNBUFFERED=1
-      - FLASK_ENV="development"
-    depends_on:
-      - pg
   pg:
-    container_name: event_housing_pg
+    container_name: event_housing_testing
     image: postgres:13.2-alpine
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: admin123
-      POSTGRES_HOST: localhost
       POSTGRES_DB: event_housing_db
       POSTGRES_HOST_AUTH_METHOD: trust
+      PGUSER: postgres
     ports:
-      - 5432:5432
+      - "5432:5432"
     volumes:
       - ./data:/data
+      - ./data/event_housing_db/init.sql:/docker-entrypoint-initdb.d/1-init.sql
   pgadmin:
-    container_name: pgadmin_container
+    container_name: pgadmin_container_testing
     image: dpage/pgadmin4:5.2
     restart: always
     environment:
@@ -41,8 +30,6 @@ services:
       - "5433:5433"
     depends_on:
       - pg
-  migration:
-    build: .
-    command: flask db upgrade
-    depends_on:
-      - api
+networks:
+  default:
+    name: nunet
