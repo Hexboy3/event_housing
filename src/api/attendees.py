@@ -51,7 +51,6 @@ def attendee_rooms_by_id(id: int):
 
 @bp.route('attendee_inventory/<string:attendee_name>', methods=['GET'])
 def attendee_inventory_by_name(attendee_name: str):
-
     '''
     Returns the inventory for each day and room type based on the attendee name entered
     '''
@@ -77,7 +76,6 @@ def attendee_inventory_by_name(attendee_name: str):
 
 @bp.route('attendee_inventory/<int:id>', methods=['GET'])
 def attendee_inventory_by_id(id: int):
-
     '''
     Returns the inventory for each day and room type based on the attendee id entered
     '''
@@ -100,8 +98,6 @@ def attendee_inventory_by_id(id: int):
 
 @bp.route('available/<string:attendee_name>', methods=['GET'])
 def available_by_name(attendee_name: str):
-
-
     '''
     Returns the available rooms based on the check in and check out dates, number of rooms needed, and attendee name entered
     '''
@@ -169,8 +165,6 @@ def available_by_name(attendee_name: str):
 
 @bp.route('available/<int:id>', methods=['GET'])
 def available_by_id(id: int):
-
-
     '''
     Returns the available rooms based on the check in and check out dates, number of rooms needed, and attendee id entered
     '''
@@ -239,13 +233,14 @@ def reserve():
     required_fields = ['first_name', 'last_name', 'check_in_date', 'check_out_date',
                        'address', 'city', 'state_abr', 'zip_code', 'room_id']
 
-    # Looping through to see if all required fields are in json request
+    # Looping through to see if all required fields are in json request and abort if not included
     for field in required_fields:
         if field not in request.json:
             return abort(400, description=f"Error: {field} not in request")
         else:
             continue
 
+    # Get Attendee Type based on attendee_id from request
     a = Attendee_Type.query.get_or_404(request.json['attendee_id'])
 
     #  Check to see if access code is correct
@@ -319,3 +314,22 @@ def reserve():
 
         # Return True (need to update to include all details of the reservation)
         return jsonify(True)
+
+
+@bp.route('/cancel/<int:id>', methods=['DELETE'])
+def cancel(id: int):
+
+    # Get reservation row
+    r = Reservation.query.get_or_404(id)
+
+    # Delete Reservation
+    Reservation.query.filter_by(ack_num=id).delete()
+
+    # Add inventory back to room in room_inventory
+    Room_Inventory.query.filter(Room_Inventory.room_id == r.room_id, Room_Inventory.date >=
+                                r.check_in_date, Room_Inventory.date < r.check_out_date).update({Room_Inventory.inventory: Room_Inventory.inventory + 1})
+
+    # Commit inventory
+    db.session.commit()
+
+    return jsonify(True)
