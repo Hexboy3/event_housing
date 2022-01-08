@@ -121,3 +121,33 @@ def see_attendees(id: int):
 
     # Convert results into json object and return it
     return jsonify(results)
+
+
+@bp.route('/remove/hotel/<int:id>', methods=['DELETE'])
+def delete_hotel(id: int):
+    """
+    Delete hotel from event
+    """
+    try:
+        Hotel.query.filter_by(id=id).delete()
+
+        db.session.commit()
+        return jsonify(True)
+
+    except:
+        return jsonify(False)
+
+
+@bp.route('/remove/room_type/<int:id>', methods=['DELETE'])
+def delete_room_type(id: int):
+    """
+    Delete room type from event
+    """
+    try:
+        Room_Type.query.filter_by(id=id).delete()
+
+        db.session.commit()
+
+        return jsonify(True)
+    except:
+        jsonify(False)
