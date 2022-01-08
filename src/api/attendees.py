@@ -228,7 +228,9 @@ def available_by_id(id: int):
 
 @bp.route('/reserve', methods=['POST'])
 def reserve():
-
+    """
+    Endpoint for Attendees to make reservations
+    """
     # List of required fields to loop through
     required_fields = ['first_name', 'last_name', 'check_in_date', 'check_out_date',
                        'address', 'city', 'state_abr', 'zip_code', 'room_id']
@@ -318,8 +320,11 @@ def reserve():
 
 @bp.route('/cancel/<int:id>', methods=['DELETE'])
 def cancel(id: int):
+    """
+    Endpoint to cancel a reservation and return inventory to room_inventories
+    """
 
-    # Get reservation row
+    # Get reservation record
     r = Reservation.query.get_or_404(id)
 
     # Delete Reservation
