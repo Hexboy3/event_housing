@@ -150,4 +150,4 @@ def delete_room_type(id: int):
 
         return jsonify(True)
     except:
-        jsonify(False)
+        return jsonify(False)
