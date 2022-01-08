@@ -45,7 +45,7 @@ attendee_rooms_table = db.Table(
 
     db.Column(
         'attendee_id', db.SmallInteger,
-        db.ForeignKey('attendee_types.id'),
+        db.ForeignKey('attendee_types.id', ondelete='CASCADE'),
         primary_key=True
     )
 )

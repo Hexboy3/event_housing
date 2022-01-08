@@ -20,3 +20,20 @@ def add_attendee():
         db.session.commit()
 
     return jsonify(at.serialize())
+
+
+@bp.route('/<int:id>', methods=['DELETE'])
+def delete_attendee(id: int):
+    """
+    Delete Attendee Type from records
+    """
+
+    try:
+        Attendee_Type.query.filter_by(id=id).delete()
+
+        db.session.commit()
+
+        return jsonify(True)
+
+    except:
+        return jsonify(False)
