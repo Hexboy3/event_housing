@@ -14,7 +14,8 @@ class Hotel(db.Model):
     city = db.Column(db.String(128), nullable=False)
     state_abr = db.Column(db.String(2), nullable=False)
     zip_code = db.Column(db.Integer, nullable=False)
-    rooms = db.relationship('Room_Type', backref='hotel', lazy='dynamic')
+    rooms = db.relationship('Room_Type', backref='hotel',
+                            lazy='dynamic')
 
     def __init__(self, name: str, address: str, city: str, state_abr: str, zip_code: int):
         self.name = name
@@ -38,7 +39,7 @@ attendee_rooms_table = db.Table(
     'attendee_rooms',
     db.Column(
         'room_id', db.SmallInteger,
-        db.ForeignKey('room_types.id'),
+        db.ForeignKey('room_types.id', ondelete='CASCADE'),
         primary_key=True
     ),
 
