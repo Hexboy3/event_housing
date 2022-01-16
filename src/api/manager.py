@@ -17,6 +17,7 @@ def add_attendee():
     if 'rooms' in request.json:
         stmt = sqlalchemy.insert(attendee_rooms_table).values(
             room_id=request.json['rooms'], attendee_id=at.id)
+        db.session.execute(stmt)
         db.session.commit()
 
     return jsonify(at.serialize())
