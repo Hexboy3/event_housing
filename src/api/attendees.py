@@ -18,6 +18,10 @@ def attendee_rooms_by_name(attendee_name: str):
     a = Attendee_Type.query.filter_by(
         name=attendee_name).one()
 
+    # check if acces code is correct
+    if a.access_code != request.json['access_code']:
+        return abort(400, description="Error: Incorrect access code")
+
     # Create a result list to add room_types to
     results = []
     # Loop through the room collection linked to the attendee
@@ -37,6 +41,10 @@ def attendee_rooms_by_id(id: int):
 
     # Filter by attendee name to get th appropriate row
     a = Attendee_Type.query.get_or_404(id)
+
+    # check if acces code is correct
+    if a.access_code != request.json['access_code']:
+        return abort(400, description="Error: Incorrect access code")
 
     # Create a result list to add room_types to
     results = []
@@ -61,6 +69,10 @@ def attendee_inventory_by_name(attendee_name: str):
     a = Attendee_Type.query.filter_by(
         name=attendee_name).one()
 
+    # check if acces code is correct
+    if a.access_code != request.json['access_code']:
+        return abort(400, description="Error: Incorrect access code")
+
     # Create a result list to add room_types to
     results = []
     # Loop through the room collection linked to the attendee
@@ -82,6 +94,10 @@ def attendee_inventory_by_id(id: int):
 
     # Filter for matching attendee row
     a = Attendee_Type.query.get_or_404(id)
+
+    # check if acces code is correct
+    if a.access_code != request.json['access_code']:
+        return abort(400, description="Error: Incorrect access code")
 
     # Create a result list to add room_types to
     results = []
