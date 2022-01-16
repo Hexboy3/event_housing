@@ -331,7 +331,7 @@ def reserve():
         db.session.commit()
 
         # Return True (need to update to include all details of the reservation)
-        return jsonify(True)
+        return jsonify(res.serialize())
 
 
 @bp.route('/cancel/<int:id>', methods=['DELETE'])
