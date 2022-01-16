@@ -191,3 +191,20 @@ class Reservation(db.Model):
         self.room_id = room_id
         self.attendee_id = attendee_id
         self.hotel_id = hotel_id
+
+    def serialize(self):
+        return{
+            "Ackowledgement Number": self.ack_num,
+            "First Name": self.first_name,
+            "Last Name": self.last_name,
+            "Check In Date": self.check_in_date,
+            "Check Out Date": self.check_out_date,
+            "Address": self.address,
+            "City": self.city,
+            "Hotel": Hotel.query.get_or_404(self.hotel_id).name,
+            "Room Type": Room_Type.query.get_or_404(self.room_id).name,
+            "Price Per Night": self.price_per_night,
+            "Number of Nights": self.number_of_nights,
+            "Total": self.total_stay_price,
+            "Date Created": self.revervation_created
+        }
