@@ -80,7 +80,8 @@ class Room_Type(db.Model):
             'id': self.id,
             'hotel': self.hotel.name,
             'name': self.name,
-            'max_guests': self.max_guests
+            'max_guests': self.max_guests,
+            'price': f'${self.price}'
         }
 
 
