@@ -75,7 +75,7 @@ def add_room_type(id: int):
     db.session.commit()
 
     # return json object to show inventory for each date
-    return jsonify(r.serialize())
+    return jsonify(r.serialize_with_hotel())
 
 
 @bp.route('/<int:id>', methods=['PATCH'])
